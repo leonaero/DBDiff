@@ -5,6 +5,7 @@ use DBDiff\Diff\UpdateData;
 use DBDiff\Diff\DeleteData;
 use DBDiff\Exceptions\DataException;
 use DBDiff\Logger;
+use Diff\DiffOp\DiffOpChange;
 
 
 class DistTableData {
@@ -34,7 +35,10 @@ class DistTableData {
             if ($diff['diff'] instanceof \Diff\DiffOp\DiffOpRemove) {
                 $diffSequence[] = new DeleteData($table, $diff);
             } else if (is_array($diff['diff'])) {
-                $diffSequence[] = new UpdateData($table, $diff);
+                $diff['diff'] = array_filter($diff['diff'], function ($d) { return $d instanceof DiffOpChange; });
+                if ($diff['diff']) {
+                    $diffSequence[] = new UpdateData($table, $diff);
+                }
             } else if ($diff['diff'] instanceof \Diff\DiffOp\DiffOpAdd) {
                 $diffSequence[] = new InsertData($table, $diff);
             }
