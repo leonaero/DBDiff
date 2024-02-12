@@ -11,9 +11,9 @@
     "require": {
         "aura/cli": "^2.2",
         "symfony/yaml": "^6.4",
-        "illuminate/database": "^9.52",
-        "illuminate/view": "^9.52",
-        "illuminate/container": "^9.52",
+        "illuminate/database": "^4.2",
+        "illuminate/view": "^4.2",
+        "illuminate/container": "^4.2",
         "diff/diff": "^3.0"
     },
     "require-dev": {
@@ -22,5 +22,10 @@
     "scripts": {
       "post-install-cmd": "scripts/post-install.sh",
       "post-update-cmd": "scripts/post-install.sh"
+    },
+    "config": {
+        "allow-plugins": {
+            "kylekatarnls/update-helper": true
+        }
     }
 }
