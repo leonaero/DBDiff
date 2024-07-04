@@ -1,5 +1,6 @@
 <?php namespace DBDiff\DB;
 
+use DBDiff\SQLGen\DiffToSQL\ValueUtils;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use DBDiff\Exceptions\DBException;
 
@@ -49,7 +50,9 @@ class DBManager {
     }
 
     public function getDB($res) {
-        return $this->capsule->getConnection($res);
+        $db = $this->capsule->getConnection($res);
+        ValueUtils::initialize($db->getPdo());
+        return $db;
     }
 
     public function getTables($connection) {

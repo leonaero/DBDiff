@@ -14,18 +14,13 @@ class UpdateDataSQL implements SQLGenInterface {
         
         $values = $this->obj->diff['diff'];
         array_walk($values, function(&$diff, $column) {
-            if(!is_null($diff->getNewValue())) {
-                $diff = '`' . $column . "` = '" . addslashes($diff->getNewValue()) . "'";
-            }
-            else {
-                $diff = '`' . $column . "` = NULL";
-            }
+            $diff = '`' . $column . "` = " . ValueUtils::toString($diff->getNewValue());
         });
         $values = implode(', ', $values);
 
         $keys = $this->obj->diff['keys'];
         array_walk($keys, function(&$value, $column) {
-            $value = '`'.$column."` = '".addslashes($value)."'";
+            $value = '`'.$column."` = " . ValueUtils::toString($value);
         });
         $condition = implode(' AND ', $keys);
         
@@ -37,13 +32,13 @@ class UpdateDataSQL implements SQLGenInterface {
         
         $values = $this->obj->diff['diff'];
         array_walk($values, function(&$diff, $column) {
-            $diff = '`'.$column."` = '".addslashes($diff->getOldValue())."'";
+            $diff = '`'.$column."` = " . ValueUtils::toString($diff->getOldValue());
         });
         $values = implode(', ', $values);
 
         $keys = $this->obj->diff['keys'];
         array_walk($keys, function(&$value, $column) {
-            $value = '`'.$column."` = '".addslashes($value)."'";
+            $value = '`'.$column."` = " . ValueUtils::toString($value);
         });
         $condition = implode(' AND ', $keys);
         
