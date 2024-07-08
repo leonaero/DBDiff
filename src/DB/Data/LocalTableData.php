@@ -36,7 +36,7 @@ class LocalTableData {
 
         $wrapConvert = function($arr, $p) {
             return array_map(function($el) use ($p) {
-                return "CONVERT(`{$p}`.`{$el}` USING utf8) as `{$el}`";
+                return "`{$p}`.`{$el}` as `{$el}`";
             }, $arr);
         };
 
@@ -104,29 +104,28 @@ class LocalTableData {
             }, $arr);
         };
 
-        $wrapCast = function($arr, $p) {
-            return array_map(function($el) use ($p) {
-                return "CAST(`{$p}`.`{$el}` AS CHAR CHARACTER SET utf8)";
-            }, $arr);
-        };
-
         $columnsAas = implode(',', $wrapAs($columns1, 'a', 's_'));
-        $columnsA   = implode(',', $wrapCast($columns1, 'a'));
         $columnsBas = implode(',', $wrapAs($columns2, 'b', 't_'));
-        $columnsB   = implode(',', $wrapCast($columns2, 'b'));
-        
+
         $keyCols = implode(' AND ', array_map(function($el) {
             return "a.{$el} = b.{$el}";
         }, $key));
 
+        $whereCols = implode(' OR ', array_map(function($el) {
+            return "(NOT a.{$el} <=> b.{$el})";
+        }, array_diff(array_intersect($columns1, $columns2), $key)));
+
+        if ($whereCols === '') {
+            return []; // table has no non-key columns to compare
+        }
+
         $this->source->setFetchMode(\PDO::FETCH_NAMED);
         $result = $this->source->select(
-           "SELECT * FROM (
-                SELECT $columnsAas, $columnsBas, MD5(concat($columnsA)) AS hash1,
-                MD5(concat($columnsB)) AS hash2 FROM {$db1}.{$table} as a 
-                INNER JOIN {$db2}.{$table} as b  
-                ON $keyCols
-            ) t WHERE hash1 <> hash2");
+            "SELECT $columnsAas, $columnsBas
+            FROM {$db1}.{$table} as a
+            INNER JOIN {$db2}.{$table} as b
+            ON $keyCols
+            WHERE $whereCols");
         $this->source->setFetchMode(\PDO::FETCH_ASSOC);
         
         foreach ($result as $row) {
@@ -144,7 +143,7 @@ class LocalTableData {
                         if ($sourceValue != $targetValue) {
                             $diff[$theKey] = new \Diff\DiffOp\DiffOpChange($targetValue, $sourceValue);
                         }
-                    } else {
+                    } elseif ($sourceValue !== null) {
                         $diff[$theKey] = new \Diff\DiffOp\DiffOpChange(NULL, $sourceValue);
                     }
                 }
